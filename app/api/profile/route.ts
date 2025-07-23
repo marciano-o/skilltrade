@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { z } from "zod"
 import { withAuth, type AuthenticatedRequest } from "@/lib/middleware"
-import { updateUserProfile, getUserById } from "@/lib/auth-server"
+import { updateUser, getUserById } from "@/lib/auth-server"
 
 const updateProfileSchema = z.object({
   firstName: z.string().min(2).optional(),
@@ -36,7 +36,7 @@ async function putHandler(req: AuthenticatedRequest) {
     const body = await req.json()
     const validatedData = updateProfileSchema.parse(body)
 
-    const success = await updateUserProfile(req.user!.id, validatedData)
+    const success = await updateUser(req.user!.id, validatedData)
 
     if (!success) {
       return NextResponse.json({ error: "Failed to update profile" }, { status: 500 })
