@@ -3,6 +3,8 @@ import { z } from "zod"
 import { withAuth, type AuthenticatedRequest } from "@/lib/middleware"
 import { db } from "@/lib/database"
 
+export const dynamic = 'force-dynamic'
+
 const sendMessageSchema = z.object({
   receiverId: z.number(),
   content: z.string().min(1).max(1000),

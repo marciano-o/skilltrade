@@ -3,6 +3,9 @@ import { withAuth, type AuthenticatedRequest } from "@/lib/middleware"
 import {  updateProfileCompletion } from "@/lib/auth-server"
 import { db } from "@/lib/database"
 
+
+export const dynamic = 'force-dynamic'
+
 // Delete skill
 async function deleteHandler(req: AuthenticatedRequest, context: { params: { id: string } }) {
   try {

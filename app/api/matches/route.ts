@@ -3,6 +3,8 @@ import { z } from "zod"
 import { withAuth, type AuthenticatedRequest } from "@/lib/middleware"
 import { db } from "@/lib/database"
 
+export const dynamic = 'force-dynamic'
+
 const createMatchSchema = z.object({
   targetUserId: z.number(),
   action: z.enum(["like", "pass"]),

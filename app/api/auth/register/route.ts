@@ -2,6 +2,8 @@ import { type NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
 import { createUser, getUserByEmail, generateToken } from "@/lib/auth-server"
 
+export const dynamic = 'force-dynamic'
+
 const registerSchema = z
   .object({
     firstName: z.string().min(2, "First name must be at least 2 characters"),

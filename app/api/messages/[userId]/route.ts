@@ -2,16 +2,22 @@ import { NextResponse } from "next/server"
 import { withAuth, type AuthenticatedRequest } from "@/lib/middleware"
 import { db } from "@/lib/database"
 
+export const dynamic = 'force-dynamic'
+
 // Get messages between current user and specific user
-async function getHandler(req: AuthenticatedRequest, { params }: { params: { userId: string } }) {
+async function getHandler(req: AuthenticatedRequest) {
   try {
-    const otherUserId = Number.parseInt(params.userId)
+    // Extract userId from the URL path
+    const url = new URL(req.url)
+    const pathSegments = url.pathname.split('/')
+    const userIdParam = pathSegments[pathSegments.length - 1] // Get the last segment
+    const otherUserId = Number.parseInt(userIdParam)
 
     if (isNaN(otherUserId)) {
       return NextResponse.json({ error: "Invalid user ID" }, { status: 400 })
     }
 
-    const { searchParams } = new URL(req.url)
+    const { searchParams } = url
     const limit = Number.parseInt(searchParams.get("limit") || "50")
     const offset = Number.parseInt(searchParams.get("offset") || "0")
 

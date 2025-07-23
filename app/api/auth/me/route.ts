@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server"
 import { withAuth, type AuthenticatedRequest } from "@/lib/middleware"
 
+export const dynamic = 'force-dynamic'
+
 async function getHandler(req: AuthenticatedRequest) {
   try {
     if (!req.user) {

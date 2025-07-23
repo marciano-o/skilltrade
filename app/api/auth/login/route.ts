@@ -1,6 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
-import { getUserByEmail, verifyPassword, generateToken, getUserById } from "@/lib/auth-server"
+import { getUserWithPassword, verifyPassword, generateToken, getUserById } from "@/lib/auth-server"
+
+export const dynamic = 'force-dynamic'
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -12,9 +14,9 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const { email, password } = loginSchema.parse(body)
 
-    // Get user by email
-    const dbUser = await getUserByEmail(email)
-    if (!dbUser) {
+    // Get user with password hash - use getUserWithPassword instead
+    const dbUser = await getUserWithPassword(email)
+    if (!dbUser || !dbUser.is_active) {
       return NextResponse.json({ error: "Invalid email or password" }, { status: 401 })
     }
 
@@ -24,7 +26,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid email or password" }, { status: 401 })
     }
 
-    // Get formatted user data
+    // Get formatted user data (without password)
     const user = await getUserById(dbUser.id)
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 })

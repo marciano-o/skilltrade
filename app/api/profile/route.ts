@@ -3,6 +3,8 @@ import { z } from "zod"
 import { withAuth, type AuthenticatedRequest } from "@/lib/middleware"
 import { updateUser, getUserById } from "@/lib/auth-server"
 
+export const dynamic = 'force-dynamic'
+
 const updateProfileSchema = z.object({
   firstName: z.string().min(2).optional(),
   lastName: z.string().min(2).optional(),

@@ -2,6 +2,8 @@ import { NextResponse } from "next/server"
 import { withAuth, type AuthenticatedRequest } from "@/lib/middleware"
 import { db } from "@/lib/database"
 
+export const dynamic = 'force-dynamic'
+
 async function getHandler(req: AuthenticatedRequest) {
   try {
     const { searchParams } = new URL(req.url)
