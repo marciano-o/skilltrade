@@ -12,8 +12,10 @@ import Image from "next/image"
 export function Navbar() {
   const pathname = usePathname()
   const [activeSection, setActiveSection] = useState<string | null>(null)
-  const { isAuthenticated, user, logout } = useAuth()
+  const { user, logout } = useAuth()
   const router = useRouter()
+
+  const isAuthenticated = !!user
 
   // Reset activeSection when navigating to a different page
   useEffect(() => {
@@ -122,7 +124,7 @@ export function Navbar() {
               <div className="flex items-center gap-2">
                 <div className="relative h-8 w-8 rounded-full overflow-hidden border-2 border-primary/20">
                   <Image
-                    src={user?.avatar || "/placeholder.svg?height=32&width=32"}
+                    src={user?.avatarUrl || "/placeholder.svg?height=32&width=32"}
                     alt={user?.name || "User"}
                     fill
                     className="object-cover"
@@ -256,7 +258,7 @@ export function Navbar() {
                     <div className="flex items-center gap-3 mb-2 p-2 rounded-md bg-muted/30">
                       <div className="relative h-8 w-8 rounded-full overflow-hidden border-2 border-primary/20">
                         <Image
-                          src={user?.avatar || "/placeholder.svg?height=32&width=32"}
+                          src={user?.avatarUrl || "/placeholder.svg?height=32&width=32"}
                           alt={user?.name || "User"}
                           fill
                           className="object-cover"
