@@ -8,6 +8,7 @@ export interface AuthenticatedRequest extends NextRequest {
 export function withAuth(handler: (req: AuthenticatedRequest) => Promise<NextResponse>) {
   return async (req: NextRequest) => {
     try {
+      // Get authorization header directly from request (NOT using headers() function)
       const authHeader = req.headers.get("authorization")
       const token = authHeader?.replace("Bearer ", "")
 
@@ -25,8 +26,8 @@ export function withAuth(handler: (req: AuthenticatedRequest) => Promise<NextRes
         return NextResponse.json({ error: "User not found or inactive" }, { status: 401 })
       }
 
-      // Update last active
-      await updateLastActive(user.id)
+      // Update last active (make it non-blocking)
+      updateLastActive(user.id).catch(console.error)
 
       const authenticatedReq = req as AuthenticatedRequest
       authenticatedReq.user = user
