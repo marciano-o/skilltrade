@@ -1,11 +1,12 @@
-import { NextResponse } from "next/server"
+import { NextResponse, type NextRequest } from "next/server"
 import { withAuth, type AuthenticatedRequest } from "@/lib/middleware"
-import { db, updateProfileCompletion } from "@/lib/auth-server"
+import {  updateProfileCompletion } from "@/lib/auth-server"
+import { db } from "@/lib/database"
 
 // Delete skill
-async function deleteHandler(req: AuthenticatedRequest, { params }: { params: { id: string } }) {
+async function deleteHandler(req: AuthenticatedRequest, context: { params: { id: string } }) {
   try {
-    const skillId = Number.parseInt(params.id)
+    const skillId = Number.parseInt(context.params.id)
 
     if (isNaN(skillId)) {
       return NextResponse.json({ error: "Invalid skill ID" }, { status: 400 })
@@ -34,4 +35,5 @@ async function deleteHandler(req: AuthenticatedRequest, { params }: { params: { 
   }
 }
 
-export const DELETE = withAuth(deleteHandler)
+export const DELETE = (req: NextRequest, context: { params: { id: string } }) =>
+  withAuth((authReq: AuthenticatedRequest) => deleteHandler(authReq, context))(req)

@@ -2,14 +2,13 @@ import { NextResponse } from "next/server"
 import { withAuth, type AuthenticatedRequest } from "@/lib/middleware"
 import { db } from "@/lib/database"
 
-// Get skills for discovery (excluding current user's skills)
 async function getHandler(req: AuthenticatedRequest) {
   try {
     const { searchParams } = new URL(req.url)
     const query = searchParams.get("q") || ""
     const category = searchParams.get("category") || ""
-    const limit = Number.parseInt(searchParams.get("limit") || "20")
-    const offset = Number.parseInt(searchParams.get("offset") || "0")
+    const limit = Math.min(Number.parseInt(searchParams.get("limit") || "20"), 50)
+    const offset = Math.max(Number.parseInt(searchParams.get("offset") || "0"), 0)
 
     let sqlQuery = `
       SELECT 
@@ -31,7 +30,7 @@ async function getHandler(req: AuthenticatedRequest) {
         AND u.is_active = TRUE
     `
 
-    const params = [req.user!.id]
+    const params: any[] = [req.user!.id]
     let paramCount = 2
 
     if (query) {

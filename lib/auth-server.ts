@@ -2,8 +2,6 @@ import bcrypt from "bcryptjs"
 import jwt from "jsonwebtoken"
 import { db } from "./database"
 
-const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key"
-
 export interface User {
   id: number
   email: string
@@ -11,14 +9,33 @@ export interface User {
   lastName: string
   name: string
   avatarUrl?: string
-  bio?: string
   location?: string
   occupation?: string
+  bio?: string
   timeCredits: number
   profileCompletion: number
   isActive: boolean
+  isVerified: boolean
   createdAt: string
   lastActive: string
+}
+
+export interface CreateUserData {
+  email: string
+  password: string
+  firstName: string
+  lastName: string
+  location?: string
+  occupation?: string
+}
+
+export interface UpdateUserData {
+  firstName?: string
+  lastName?: string
+  location?: string
+  occupation?: string
+  bio?: string
+  avatarUrl?: string
 }
 
 export async function hashPassword(password: string): Promise<string> {
@@ -30,134 +47,193 @@ export async function verifyPassword(password: string, hashedPassword: string): 
 }
 
 export function generateToken(userId: number): string {
-  return jwt.sign({ userId }, JWT_SECRET, { expiresIn: "7d" })
+  if (!process.env.JWT_SECRET) {
+    throw new Error("JWT_SECRET is not defined")
+  }
+  return jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: "7d" })
 }
 
 export function verifyToken(token: string): { userId: number } | null {
   try {
-    return jwt.verify(token, JWT_SECRET) as { userId: number }
+    if (!process.env.JWT_SECRET) {
+      throw new Error("JWT_SECRET is not defined")
+    }
+    const decoded = jwt.verify(token, process.env.JWT_SECRET) as { userId: number }
+    return decoded
   } catch {
     return null
   }
 }
 
-export async function createUser(userData: {
-  email: string
-  password: string
-  firstName: string
-  lastName: string
-}): Promise<User | null> {
-  try {
-    const hashedPassword = await hashPassword(userData.password)
+export async function createUser(userData: CreateUserData): Promise<User> {
+  const hashedPassword = await hashPassword(userData.password)
 
-    const result = await db.query(
-      `INSERT INTO users (email, password_hash, first_name, last_name, time_credits)
-       VALUES ($1, $2, $3, $4, $5)
-       RETURNING id, email, first_name, last_name, time_credits, profile_completion, is_active, created_at, last_active`,
-      [userData.email, hashedPassword, userData.firstName, userData.lastName, 10],
-    )
+  const result = await db.query(
+    `INSERT INTO users (email, password_hash, first_name, last_name, location, occupation, time_credits, is_active, profile_completion)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+     RETURNING id, email, first_name, last_name, avatar_url, location, occupation, bio, time_credits, profile_completion, is_active, is_verified, created_at, last_active`,
+    [
+      userData.email.toLowerCase(),
+      hashedPassword,
+      userData.firstName,
+      userData.lastName,
+      userData.location || null,
+      userData.occupation || null,
+      10,
+      true,
+      20,
+    ],
+  )
 
-    const user = result.rows[0]
-    return {
-      id: user.id,
-      email: user.email,
-      firstName: user.first_name,
-      lastName: user.last_name,
-      name: `${user.first_name} ${user.last_name}`,
-      timeCredits: user.time_credits,
-      profileCompletion: user.profile_completion,
-      isActive: user.is_active,
-      createdAt: user.created_at,
-      lastActive: user.last_active,
-    }
-  } catch (error) {
-    console.error("Create user error:", error)
-    return null
+  const user = result.rows[0]
+  return {
+    id: user.id,
+    email: user.email,
+    firstName: user.first_name,
+    lastName: user.last_name,
+    name: `${user.first_name} ${user.last_name}`,
+    avatarUrl: user.avatar_url,
+    location: user.location,
+    occupation: user.occupation,
+    bio: user.bio,
+    timeCredits: user.time_credits,
+    profileCompletion: user.profile_completion,
+    isActive: user.is_active,
+    isVerified: user.is_verified,
+    createdAt: user.created_at?.toISOString() || new Date().toISOString(),
+    lastActive: user.last_active?.toISOString() || new Date().toISOString(),
   }
 }
 
-export async function getUserByEmail(email: string) {
-  try {
-    const result = await db.query("SELECT * FROM users WHERE email = $1", [email])
-    return result.rows[0] || null
-  } catch (error) {
-    console.error("Get user by email error:", error)
-    return null
+export async function getUserByEmail(email: string): Promise<User | null> {
+  const result = await db.query(
+    `SELECT id, email, first_name, last_name, avatar_url, location, occupation, bio, 
+            time_credits, profile_completion, is_active, is_verified, created_at, last_active 
+     FROM users WHERE email = $1 AND is_active = true`,
+    [email.toLowerCase()],
+  )
+
+  if (result.rows.length === 0) return null
+
+  const user = result.rows[0]
+  return {
+    id: user.id,
+    email: user.email,
+    firstName: user.first_name,
+    lastName: user.last_name,
+    name: `${user.first_name} ${user.last_name}`,
+    avatarUrl: user.avatar_url,
+    location: user.location,
+    occupation: user.occupation,
+    bio: user.bio,
+    timeCredits: user.time_credits,
+    profileCompletion: user.profile_completion,
+    isActive: user.is_active,
+    isVerified: user.is_verified,
+    createdAt: user.created_at?.toISOString() || new Date().toISOString(),
+    lastActive: user.last_active?.toISOString() || new Date().toISOString(),
   }
 }
 
 export async function getUserById(id: number): Promise<User | null> {
-  try {
-    const result = await db.query(
-      `SELECT id, email, first_name, last_name, avatar_url, bio, location, occupation,
-              time_credits, profile_completion, is_active, created_at, last_active
-       FROM users WHERE id = $1`,
-      [id],
-    )
+  const result = await db.query(
+    `SELECT id, email, first_name, last_name, avatar_url, location, occupation, bio, 
+            time_credits, profile_completion, is_active, is_verified, created_at, last_active 
+     FROM users WHERE id = $1 AND is_active = true`,
+    [id],
+  )
 
-    const user = result.rows[0]
-    if (!user) return null
+  if (result.rows.length === 0) return null
 
-    return {
-      id: user.id,
-      email: user.email,
-      firstName: user.first_name,
-      lastName: user.last_name,
-      name: `${user.first_name} ${user.last_name}`,
-      avatarUrl: user.avatar_url,
-      bio: user.bio,
-      location: user.location,
-      occupation: user.occupation,
-      timeCredits: user.time_credits,
-      profileCompletion: user.profile_completion,
-      isActive: user.is_active,
-      createdAt: user.created_at,
-      lastActive: user.last_active,
-    }
-  } catch (error) {
-    console.error("Get user by ID error:", error)
-    return null
+  const user = result.rows[0]
+  return {
+    id: user.id,
+    email: user.email,
+    firstName: user.first_name,
+    lastName: user.last_name,
+    name: `${user.first_name} ${user.last_name}`,
+    avatarUrl: user.avatar_url,
+    location: user.location,
+    occupation: user.occupation,
+    bio: user.bio,
+    timeCredits: user.time_credits,
+    profileCompletion: user.profile_completion,
+    isActive: user.is_active,
+    isVerified: user.is_verified,
+    createdAt: user.created_at?.toISOString() || new Date().toISOString(),
+    lastActive: user.last_active?.toISOString() || new Date().toISOString(),
   }
 }
 
-export async function updateUserProfile(userId: number, updates: any): Promise<boolean> {
-  try {
-    const fields: string[]= []
-    const values: any[]= []
-    let paramCount = 1
+export async function getUserWithPassword(email: string): Promise<any | null> {
+  const result = await db.query(
+    `SELECT id, email, password_hash, first_name, last_name, is_active 
+     FROM users WHERE email = $1`,
+    [email.toLowerCase()],
+  )
 
-    Object.entries(updates).forEach(([key, value]) => {
-      if (value !== undefined) {
-        const dbKey =
-          key === "firstName"
-            ? "first_name"
-            : key === "lastName"
-              ? "last_name"
-              : key === "avatarUrl"
-                ? "avatar_url"
-                : key
-        fields.push(`${dbKey} = $${paramCount}`)
-        values.push(value)
-        paramCount++
-      }
-    })
+  return result.rows[0] || null
+}
 
-    if (fields.length === 0) return true
+export async function updateUser(userId: number, updates: UpdateUserData): Promise<User | null> {
+  const fields: string[] = []
+  const values: any[] = []
+  let paramCount = 1
 
-    values.push(userId)
-    const query = `UPDATE users SET ${fields.join(", ")}, updated_at = CURRENT_TIMESTAMP WHERE id = $${paramCount}`
+  const fieldMap: Record<string, string> = {
+    firstName: "first_name",
+    lastName: "last_name",
+    avatarUrl: "avatar_url",
+  }
 
-    await db.query(query, values)
-    return true
-  } catch (error) {
-    console.error("Update user profile error:", error)
-    return false
+  Object.entries(updates).forEach(([key, value]) => {
+    if (value !== undefined) {
+      const dbField = fieldMap[key] || key
+      fields.push(`${dbField} = $${paramCount}`)
+      values.push(value)
+      paramCount++
+    }
+  })
+
+  if (fields.length === 0) {
+    return getUserById(userId)
+  }
+
+  values.push(userId)
+  const query = `
+    UPDATE users 
+    SET ${fields.join(", ")}, updated_at = NOW()
+    WHERE id = $${paramCount}
+    RETURNING id, email, first_name, last_name, avatar_url, location, occupation, bio, 
+              time_credits, profile_completion, is_active, is_verified, created_at, last_active
+  `
+
+  const result = await db.query(query, values)
+  if (result.rows.length === 0) return null
+
+  const user = result.rows[0]
+  return {
+    id: user.id,
+    email: user.email,
+    firstName: user.first_name,
+    lastName: user.last_name,
+    name: `${user.first_name} ${user.last_name}`,
+    avatarUrl: user.avatar_url,
+    location: user.location,
+    occupation: user.occupation,
+    bio: user.bio,
+    timeCredits: user.time_credits,
+    profileCompletion: user.profile_completion,
+    isActive: user.is_active,
+    isVerified: user.is_verified,
+    createdAt: user.created_at?.toISOString() || new Date().toISOString(),
+    lastActive: user.last_active?.toISOString() || new Date().toISOString(),
   }
 }
 
 export async function updateLastActive(userId: number): Promise<void> {
   try {
-    await db.query("UPDATE users SET last_active = CURRENT_TIMESTAMP WHERE id = $1", [userId])
+    await db.query("UPDATE users SET last_active = NOW() WHERE id = $1", [userId])
   } catch (error) {
     console.error("Update last active error:", error)
   }
@@ -184,5 +260,3 @@ export async function updateProfileCompletion(userId: number): Promise<void> {
     console.error("Update profile completion error:", error)
   }
 }
-
-export { db }

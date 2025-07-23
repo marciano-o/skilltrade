@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server"
 import { z } from "zod"
 import { withAuth, type AuthenticatedRequest } from "@/lib/middleware"
-import { db, updateProfileCompletion } from "@/lib/auth-server"
+import { updateProfileCompletion } from "@/lib/auth-server"
+import { db } from "@/lib/database"
 
 const skillSchema = z.object({
   name: z.string().min(1, "Skill name is required"),
@@ -105,18 +106,16 @@ async function putHandler(req: AuthenticatedRequest) {
     const body = await req.json()
     const { offering, seeking } = bulkSkillsSchema.parse(body)
 
-    // Start transaction
-    const client = await db.getClient()
+    // Use transaction
+    await db.query("BEGIN")
 
     try {
-      await client.query("BEGIN")
-
       // Delete existing skills
-      await client.query("DELETE FROM skills WHERE user_id = $1", [req.user!.id])
+      await db.query("DELETE FROM skills WHERE user_id = $1", [req.user!.id])
 
       // Insert offering skills
       for (const skillName of offering) {
-        await client.query("INSERT INTO skills (user_id, name, category, type) VALUES ($1, $2, $3, $4)", [
+        await db.query("INSERT INTO skills (user_id, name, category, type) VALUES ($1, $2, $3, $4)", [
           req.user!.id,
           skillName,
           "General",
@@ -126,7 +125,7 @@ async function putHandler(req: AuthenticatedRequest) {
 
       // Insert seeking skills
       for (const skillName of seeking) {
-        await client.query("INSERT INTO skills (user_id, name, category, type) VALUES ($1, $2, $3, $4)", [
+        await db.query("INSERT INTO skills (user_id, name, category, type) VALUES ($1, $2, $3, $4)", [
           req.user!.id,
           skillName,
           "General",
@@ -134,7 +133,7 @@ async function putHandler(req: AuthenticatedRequest) {
         ])
       }
 
-      await client.query("COMMIT")
+      await db.query("COMMIT")
 
       // Update profile completion
       await updateProfileCompletion(req.user!.id)
@@ -144,10 +143,8 @@ async function putHandler(req: AuthenticatedRequest) {
         message: "Skills updated successfully",
       })
     } catch (error) {
-      await client.query("ROLLBACK")
+      await db.query("ROLLBACK")
       throw error
-    } finally {
-      client.release()
     }
   } catch (error) {
     if (error instanceof z.ZodError) {

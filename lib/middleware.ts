@@ -1,24 +1,18 @@
-// Authentication middleware for API routes
 import { type NextRequest, NextResponse } from "next/server"
-import { verifyToken, getUserById, updateLastActive } from "./auth-server"
+import { verifyToken, getUserById, updateLastActive, type User } from "./auth-server"
 
 export interface AuthenticatedRequest extends NextRequest {
-  user?: {
-    id: number
-    email: string
-    firstName: string
-    lastName: string
-    name: string
-  }
+  user?: User
 }
 
-export async function withAuth(handler: (req: AuthenticatedRequest) => Promise<NextResponse>) {
+export function withAuth(handler: (req: AuthenticatedRequest) => Promise<NextResponse>) {
   return async (req: NextRequest) => {
     try {
-      const token = req.headers.get("authorization")?.replace("Bearer ", "")
+      const authHeader = req.headers.get("authorization")
+      const token = authHeader?.replace("Bearer ", "")
 
       if (!token) {
-        return NextResponse.json({ error: "Authentication required" }, { status: 401 })
+        return NextResponse.json({ error: "No token provided" }, { status: 401 })
       }
 
       const decoded = verifyToken(token)
@@ -27,34 +21,20 @@ export async function withAuth(handler: (req: AuthenticatedRequest) => Promise<N
       }
 
       const user = await getUserById(decoded.userId)
-      if (!user) {
-        return NextResponse.json({ error: "User not found" }, { status: 401 })
+      if (!user || !user.isActive) {
+        return NextResponse.json({ error: "User not found or inactive" }, { status: 401 })
       }
 
-      // Update last active timestamp
+      // Update last active
       await updateLastActive(user.id)
 
-      // Add user to request
-      ;(req as AuthenticatedRequest).user = user
+      const authenticatedReq = req as AuthenticatedRequest
+      authenticatedReq.user = user
 
-      return handler(req as AuthenticatedRequest)
+      return handler(authenticatedReq)
     } catch (error) {
       console.error("Auth middleware error:", error)
       return NextResponse.json({ error: "Authentication failed" }, { status: 401 })
-    }
-  }
-}
-
-export function validateRequest(schema: any) {
-  return (handler: (req: NextRequest, validatedData: any) => Promise<NextResponse>) => {
-    return async (req: NextRequest) => {
-      try {
-        const body = await req.json()
-        const validatedData = schema.parse(body)
-        return handler(req, validatedData)
-      } catch (error) {
-        return NextResponse.json({ error: "Invalid request data", details: error }, { status: 400 })
-      }
     }
   }
 }

@@ -1,30 +1,30 @@
 import { Pool } from "pg"
 
+// Check if DATABASE_URL is set
+if (!process.env.DATABASE_URL) {
+  throw new Error("DATABASE_URL environment variable is not set")
+}
+
 // Create a connection pool
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false,
+  max: 20,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 2000,
 })
 
 // Export the pool for direct queries
-export const db = {
-  query: (text: string, params?: any[]) => pool.query(text, params),
-  getClient: () => pool.connect(),
-}
+export const db = pool
 
 // Test the connection
-export async function testConnection() {
-  try {
-    const client = await pool.connect()
-    const result = await client.query("SELECT NOW()")
-    client.release()
-    console.log("✅ Database connected successfully at:", result.rows[0].now)
-    return true
-  } catch (error) {
-    console.error("❌ Database connection failed:", error)
-    return false
-  }
-}
+db.on("connect", () => {
+  console.log("Connected to PostgreSQL database")
+})
+
+db.on("error", (err) => {
+  console.error("PostgreSQL connection error:", err)
+})
 
 // Initialize database tables
 export async function initializeDatabase() {
