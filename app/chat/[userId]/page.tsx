@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ArrowLeft, Send, Phone, Video, MoreHorizontal, Clock, Check, CheckCheck, Zap } from "lucide-react"
 import { useOptimizedChat } from "@/hooks/use-optimized-chat"
-import { ProtectedRoute } from "@/components/auth/protected-route"
 
 // Mock data for users
 const users = [
@@ -279,10 +278,3 @@ function ChatRoom() {
   )
 }
 
-export default function ChatRoomWrapper() {
-  return (
-    <ProtectedRoute feature="chat">
-      <ChatRoom />
-    </ProtectedRoute>
-  )
-}

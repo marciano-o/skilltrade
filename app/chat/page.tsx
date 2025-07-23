@@ -8,7 +8,6 @@ import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Search, MessageCircle } from "lucide-react"
-import { ProtectedRoute } from "@/components/auth/protected-route"
 
 // Mock data for conversations
 const conversations = [
@@ -188,10 +187,3 @@ function ChatPage() {
   )
 }
 
-export default function ChatPageWrapper() {
-  return (
-    <ProtectedRoute feature="chat">
-      <ChatPage />
-    </ProtectedRoute>
-  )
-}

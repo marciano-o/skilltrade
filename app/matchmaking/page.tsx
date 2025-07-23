@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Check, X, Heart, MessageCircle } from "lucide-react"
-import { ProtectedRoute } from "@/components/auth/protected-route"
 
 // Mock data for potential matches
 const initialMatches = [
@@ -362,13 +361,5 @@ function MatchmakingPage() {
         </div>
       )}
     </div>
-  )
-}
-
-export default function MatchmakingPageWrapper() {
-  return (
-    <ProtectedRoute feature="matchmaking">
-      <MatchmakingPage />
-    </ProtectedRoute>
   )
 }
