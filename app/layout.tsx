@@ -10,7 +10,7 @@ import { PerformanceMonitorComponent } from "@/components/performance-monitor"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "SkillTrade - Trade Skills, Grow Together",
+  title: "SkillTrade",
   description: "A platform for trading skills with others",
     generator: 'v0.dev'
 }
