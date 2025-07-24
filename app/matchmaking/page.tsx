@@ -363,3 +363,6 @@ function MatchmakingPage() {
     </div>
   )
 }
+
+// Add this export statement
+export default MatchmakingPage
