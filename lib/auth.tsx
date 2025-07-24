@@ -24,8 +24,9 @@ interface User {
 interface AuthContextType {
   user: User | null
   loading: boolean
-  login: (email: string, password: string) => Promise<void>
-  register: (userData: RegisterData) => Promise<void>
+  isLoading: boolean // Add this for consistency with login component
+  login: (email: string, password: string) => Promise<boolean> // Change return type to boolean
+  register: (userData: RegisterData) => Promise<boolean> // Change return type to boolean
   logout: () => void
   updateUser: (userData: Partial<User>) => void
   refreshUser: () => Promise<void>
@@ -44,6 +45,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(false) // Add separate loading state for operations
 
   useEffect(() => {
     checkAuth()
@@ -75,7 +77,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string): Promise<boolean> => {
+    setIsLoading(true)
     try {
       const response = await apiClient.login(email, password)
 
@@ -83,16 +86,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(response.user)
         localStorage.setItem("skilltrade_token", response.token)
         apiClient.setToken(response.token)
+        return true // Return true on success
       } else {
         throw new Error(response.error || "Login failed")
       }
     } catch (error) {
       console.error("Login error:", error)
-      throw error
+      return false // Return false on error
+    } finally {
+      setIsLoading(false)
     }
   }
 
-  const register = async (userData: RegisterData) => {
+  const register = async (userData: RegisterData): Promise<boolean> => {
+    setIsLoading(true)
     try {
       const response = await apiClient.register(userData)
 
@@ -100,12 +107,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(response.user)
         localStorage.setItem("skilltrade_token", response.token)
         apiClient.setToken(response.token)
+        return true // Return true on success
       } else {
-        throw new Error(response.error || "Registration failed")
+        console.error("Registration error:", response.error || "Registration failed")
+        return false // Return false if response indicates failure
       }
     } catch (error) {
       console.error("Registration error:", error)
-      throw error
+      return false // Return false on error
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -135,6 +146,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const value = {
     user,
     loading,
+    isLoading, // Include isLoading in the context value
     login,
     register,
     logout,
