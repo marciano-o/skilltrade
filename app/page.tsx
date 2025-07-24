@@ -16,7 +16,7 @@ export default function HomePage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-teal-500"></div>
       </div>
     )
   }
@@ -29,7 +29,7 @@ export default function HomePage() {
           <div className="text-center">
             <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
               Trade Skills,
-              <span className="text-blue-600"> Build Community</span>
+              <span className="text-teal-500"> Build Community</span>
             </h1>
             <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
               Connect with others to exchange knowledge and skills. Learn something new while teaching what you know
@@ -45,7 +45,7 @@ export default function HomePage() {
                   placeholder="What skill do you want to learn?"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 pr-4 py-3 text-lg border-2 border-gray-200 focus:border-blue-500 rounded-full"
+                  className="pl-10 pr-4 py-3 text-lg border-2 border-gray-200 focus:border-teal-500 rounded-full"
                 />
               </div>
             </div>
@@ -55,7 +55,7 @@ export default function HomePage() {
               {user ? (
                 <>
                   <Link href="/discover">
-                    <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-full">
+                    <Button size="lg" className="bg-teal-500 hover:bg-teal-600 text-white px-8 py-3 rounded-full">
                       Discover Skills
                       <ArrowRight className="ml-2 h-5 w-5" />
                     </Button>
@@ -64,7 +64,7 @@ export default function HomePage() {
                     <Button
                       variant="outline"
                       size="lg"
-                      className="border-blue-600 text-blue-600 hover:bg-blue-50 px-8 py-3 rounded-full bg-transparent"
+                      className="border-teal-500 text-teal-500 hover:bg-blue-50 px-8 py-3 rounded-full bg-transparent"
                     >
                       Complete Profile
                     </Button>
@@ -73,7 +73,7 @@ export default function HomePage() {
               ) : (
                 <>
                   <Link href="/auth/register">
-                    <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-full">
+                    <Button size="lg" className="bg-teal-500 hover:bg-teal-600 text-white px-8 py-3 rounded-full">
                       Get Started Free
                       <ArrowRight className="ml-2 h-5 w-5" />
                     </Button>
@@ -82,7 +82,7 @@ export default function HomePage() {
                     <Button
                       variant="outline"
                       size="lg"
-                      className="border-blue-600 text-blue-600 hover:bg-blue-50 px-8 py-3 rounded-full bg-transparent"
+                      className="border-teal-500 text-teal-500 hover:bg-blue-50 px-8 py-3 rounded-full bg-transparent"
                     >
                       Sign In
                     </Button>
@@ -222,7 +222,7 @@ export default function HomePage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-blue-600">
+      <section className="py-20 bg-teal-500">
         <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Ready to Start Learning?</h2>
           <p className="text-xl text-blue-100 mb-8">
@@ -230,7 +230,7 @@ export default function HomePage() {
           </p>
           {!user && (
             <Link href="/auth/register">
-              <Button size="lg" className="bg-white text-blue-600 hover:bg-gray-100 px-8 py-3 rounded-full">
+              <Button size="lg" className="bg-white text-teal-500 hover:bg-gray-100 px-8 py-3 rounded-full">
                 Join SkillTrade Today
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
