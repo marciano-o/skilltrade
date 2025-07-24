@@ -1,6 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { verifyToken, getUserById, updateLastActive, type User } from "./auth-server"
 
+export const dynamic = 'force-dynamic'
+
 export interface AuthenticatedRequest extends NextRequest {
   user?: User
 }
